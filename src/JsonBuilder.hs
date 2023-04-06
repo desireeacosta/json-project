@@ -45,7 +45,7 @@ parseList' xs = if isOpenCharList xs
         else [Nothing]
 
 showNode :: (String, Maybe JsonValue) -> String
-showNode (name,value) = show name ++ ": " ++ writeJson value
+showNode (name,value) = "\"" ++ name ++ "\": " ++ writeJson value
 
 createFromObject :: [(String, Maybe JsonValue)] -> String
 createFromObject [] = ""
@@ -125,7 +125,7 @@ splitObject _ Nothing (_:_) = []
 splitObject _ (Just []) [] = []
 splitObject _ (Just []) ys = [reverse ys]
 splitObject c (Just(x:xs)) ys
-                | x == c = if allListsClosed 0 0 '{' '}' ys
+                | x == c = if allListsClosed 0 0 '{' '}' ys && allListsClosed 0 0 '[' ']' ys
                         then reverse ys : splitObject c (Just xs) []
                         else splitAcc c (Just xs) (x:ys)
                 | otherwise = splitObject c (Just xs) (x : ys)
