@@ -45,7 +45,7 @@ parseList' xs = if isOpenCharList xs
         else [Nothing]
 
 showNode :: (String, Maybe JsonValue) -> String
-showNode (name,value) = "\"" ++ name ++ "\": " ++ writeJson value
+showNode (name,value) = "\"" ++ trim name ++ "\": " ++ writeJson value
 
 createFromObject :: [(String, Maybe JsonValue)] -> String
 createFromObject [] = ""
@@ -53,7 +53,7 @@ createFromObject xs = intercalate ", " (map showNode xs)
 
 buildTuple :: String -> (String, Maybe JsonValue)
 buildTuple [] = ("", Just (JString ""))
-buildTuple s = let x:y:_ = splitObject ':' (Just s) [] in (x, getJValue (trim y))
+buildTuple s = let x:y:_ = splitObject ':' (Just s) [] in (trim x, getJValue (trim y))
 
 isDigit' :: String -> Bool
 isDigit' [] = False
@@ -90,6 +90,10 @@ getJValue str@(x:_)
                 then parseBool (map toLower str)
                 else Nothing
 
+allQuotesClosed :: Int -> String -> Bool
+allQuotesClosed n [] = even n
+allQuotesClosed n (x:xs) = if x == '\"' then allQuotesClosed (n + 1) xs else allQuotesClosed n xs
+
 allListsClosed :: Int -> Int -> Char -> Char -> String -> Bool
 allListsClosed a b _ _ [] = a == b
 allListsClosed a b c d (x:xs)
@@ -114,7 +118,7 @@ splitAcc _ Nothing (_:_) = []
 splitAcc _ (Just []) [] = []
 splitAcc _ (Just []) ys = [reverse ys]
 splitAcc c (Just(x:xs)) ys
-                | x == c = if allListsClosed 0 0 '[' ']' ys && allListsClosed 0 0 '{' '}' ys
+                | x == c = if allListsClosed 0 0 '[' ']' ys && allListsClosed 0 0 '{' '}' ys && allQuotesClosed 0 ys
                         then reverse ys : splitAcc c (Just xs) []
                         else splitAcc c (Just xs) (x:ys)
                 | otherwise = splitAcc c (Just xs) (x : ys)
